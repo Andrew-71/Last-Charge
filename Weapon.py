@@ -1,5 +1,8 @@
 import pygame
+from pygame import mixer
 import math
+
+mixer.init()
 
 
 def normalize_vector(vector):
@@ -55,7 +58,7 @@ class Projectile(pygame.sprite.Sprite):
                            (self.rect.width // 2, self.rect.height // 2),
                            self.rect.width // 2)
 
-    def behaviour(self, mobs, time_delta):
+    def behaviour(self, mobs, columns, time_delta):
         # Move
         self.pos[0] += self.move_vector[0] * time_delta * 0.12
         self.pos[1] += self.move_vector[1] * time_delta * 0.12
@@ -65,6 +68,10 @@ class Projectile(pygame.sprite.Sprite):
             if pygame.sprite.collide_circle(self, sprite):
                 sprite.hp -= self.damage
                 self.player.damage_indicators.add(DamageIndicator(self.pos, self.damage))
+                self.kill()
+
+        for sprite in columns:
+            if pygame.sprite.collide_circle(self, sprite):
                 self.kill()
 
         # If bullet reached its range it stops existing
@@ -84,36 +91,32 @@ class Projectile(pygame.sprite.Sprite):
 
 
 class Weapon:
-    def __init__(self, cooldown, name, damage, weapon_range, cost):
+    def __init__(self, cooldown, name, damage, weapon_range):
         self.last_shot = 0
         self.name = name
         self.cooldown = cooldown
         self.damage = damage
         self.weapon_range = weapon_range
-        self.cost = cost
+        self.ammunition = 30
 
-    def can_fire(self, user):
-        # Check if enough time passed since last shot
-        # And if player can afford to fire
-        # Returns True or False
-        energy = user.energy
-        current_time = pygame.time.get_ticks()
-        if current_time - self.last_shot > self.cooldown and \
-                energy >= self.cost:
-            return True
-        else:
-            return False
+        self.sound_effect = mixer.Sound('sounds/shoot.wav')
+        self.no_round_sound = mixer.Sound('sounds/no_round.wav')
 
     def shoot(self, user, mouse_pos):
-        if self.can_fire(user):
-            user.energy -= self.cost
+        current_time = pygame.time.get_ticks()
+        if current_time - self.last_shot > self.cooldown:
             self.last_shot = pygame.time.get_ticks()
 
-            direction = (mouse_pos[0] - user.pos[0], mouse_pos[1] - user.pos[1]) \
-                if mouse_pos != user.pos else (1, 1)
+            if self.ammunition > 0:
+                self.ammunition -= 1
 
-            user.projectiles.add(Projectile(user.pos,
-                                            normalize_vector(direction),
-                                            self.damage, self.weapon_range, user))
-        else:
-            pass
+                direction = (mouse_pos[0] - user.pos[0], mouse_pos[1] - user.pos[1]) \
+                    if mouse_pos != user.pos else (1, 1)
+
+                user.projectiles.add(Projectile(user.pos,
+                                                normalize_vector(direction),
+                                                self.damage, self.weapon_range, user))
+
+                self.sound_effect.play()
+            else:
+                self.no_round_sound.play()

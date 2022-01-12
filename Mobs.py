@@ -50,7 +50,7 @@ class BaseMob(pygame.sprite.Sprite):
 
         self.waypoint = new_waypoint
 
-    def move(self, mobs, time_delta, main_player):
+    def move(self, mobs, columns, time_delta, main_player):
         # Create direction vector to waypoint
         # Fancy words, doesn't make me understand it any more
         move_vector = (self.waypoint[0] - self.pos[0],
@@ -69,6 +69,12 @@ class BaseMob(pygame.sprite.Sprite):
             if pygame.sprite.collide_circle(self, sprite):
                 move_vector[0] += self.pos[0] - sprite.pos[0]
                 move_vector[1] += self.pos[1] - sprite.pos[1]
+
+        for sprite in columns:
+            if pygame.sprite.collide_circle(self, sprite):
+                move_vector[0] += self.pos[0] - sprite.pos[0]
+                move_vector[1] += self.pos[1] - sprite.pos[1]
+
         move_vector = normalize_vector(move_vector)
         self.pos[0] += move_vector[0]
         self.pos[1] += move_vector[1]
@@ -91,7 +97,7 @@ class BaseMob(pygame.sprite.Sprite):
         if math.sqrt(distance_x ** 2 + distance_y ** 2) < 10:
             player.sprite.energy -= 1
 
-    def behaviour(self, mobs, time_delta, main_player):
+    def behaviour(self, mobs, columns, time_delta, main_player):
         # If waypoint is reached get a new one
         distance_x = self.waypoint[0] - self.pos[0]
         distance_y = self.waypoint[1] - self.pos[1]
@@ -101,7 +107,7 @@ class BaseMob(pygame.sprite.Sprite):
             self.pick_waypoint(main_player)
 
         # Move and attempt to attack the player
-        self.move(mobs, time_delta, main_player)
+        self.move(mobs, columns, time_delta, main_player)
         self.attempt_drain_battery(main_player)
 
         # If mob is dead tell that to main system

@@ -4,6 +4,8 @@ import random
 
 import Mobs  # Mobs
 import Player  # Player class
+import Environment
+
 
 pygame.init()
 pygame.font.init()
@@ -78,9 +80,23 @@ def game_loop():
         mob = Mobs.BaseMob(100, 0.01, position)
         mobs.add(mob)
 
+    columns = pygame.sprite.Group()
+    for i in range(5):
+        position = [random.randint(10, size[0] - 10), random.randint(10, size[0] - 10)]
+        distance_x = position[0]
+        distance_y = position[1]
+        if math.sqrt(distance_x ** 2 + distance_y ** 2) <= 40:
+            position[0] += (100 - distance_x)
+            position[1] += (100 - distance_y)
+
+        column = Environment.Column(position)
+        columns.add(column)
+
     player = pygame.sprite.GroupSingle(Player.Player())
+    ammo_crate = pygame.sprite.GroupSingle(Environment.AmmoCrate((100, 100)))
 
     while player.sprite.alive and not done:
+
         tickrate = 100
 
         keys = pygame.key.get_pressed()
@@ -96,18 +112,21 @@ def game_loop():
         screen.fill(BGCOLOR)
 
         for i in mobs.sprites():
-            i.behaviour(mobs, tickrate, player)
+            i.behaviour(mobs, columns, tickrate, player)
             i.render(screen)
 
         for i in player.sprite.projectiles:
-            i.behaviour(mobs, tickrate)
+            i.behaviour(mobs, columns, tickrate)
             i.render(screen)
 
         for i in player.sprite.damage_indicators:
             i.behaviour(tickrate)
             i.render(screen)
 
-        player.sprite.move(mobs, tickrate)
+        for i in columns.sprites():
+            i.render(screen)
+
+        player.sprite.move(mobs, columns, tickrate)
         player.sprite.render(screen)
 
         player.sprite.energy = round(player.sprite.energy, 2)
@@ -115,6 +134,12 @@ def game_loop():
             done = True
         # TODO: Placeholder energy display
         screen.blit(pygame.font.SysFont('Arial', 30).render(f'E: {player.sprite.energy}', True, (0, 150, 255)), (10, 10))
+        screen.blit(pygame.font.SysFont('Arial', 30).render(f'Ammo: {player.sprite.weapon.ammunition}', True,
+                                                            (0, 150, 255)), (10, 50))
+
+        if ammo_crate.sprite is not None:
+            ammo_crate.sprite.render(screen)
+            ammo_crate.sprite.behaviour(player)
 
         pygame.display.flip()
         pygame.time.Clock().tick(tickrate)
@@ -124,6 +149,5 @@ while __name__ == '__main__':
     screen.fill(BGCOLOR)
     pygame.display.flip()
     game_loop()
-
 
 pygame.quit()
