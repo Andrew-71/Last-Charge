@@ -12,7 +12,6 @@ pygame.init()
 pygame.font.init()
 
 size = (800, 600)
-BGCOLOR = (0, 255, 255)
 BGCOLOR = (100, 255, 255)
 PLAYERCOLOR = (255, 0, 0)
 screen = pygame.display.set_mode(size)
@@ -137,7 +136,6 @@ def process_mouse(mouse, player):
     if mouse[0]:
         player.sprite.shoot(pygame.mouse.get_pos(), screen)
     if mouse[2]:
-        player.sprite.energy -= 0.05
         tickrate -= 50
 
 
@@ -155,8 +153,9 @@ def game_loop():
     ammo_crates = pygame.sprite.Group()
     spawn_points = list()
 
-    # Load the level.
-    level = level_to_list('arena_level.txt')
+    # Load a random level.
+    levels = ('arena_level.txt', 'arena_2_level.txt', 'arena_3_level.txt')
+    level = level_to_list(random.choice(levels))
     x = y = 120
     spawn_point = (x, y)
     for row in level:
@@ -222,16 +221,89 @@ def game_loop():
         player.sprite.energy = round(player.sprite.energy, 2)
         if player.sprite.energy <= 0:
             done = True
-            return total_score
 
         # Update the screen
         pygame.display.flip()
         pygame.time.Clock().tick(tickrate)
 
+    f = open('best_score.txt', 'r')
+    if total_score > int(f.read().strip()):
+        f = open('best_score.txt', 'w')
+        f.write(str(total_score))
+    f.close()
+    end_screen(total_score)
+
+
+# I made this in 10 minutes and it kinda works
+def start_screen():
+    color = (255, 255, 255)
+    color_light = (170, 170, 170)
+    color_dark = (100, 100, 100)
+    width = screen.get_width()
+    height = screen.get_height()
+    smallfont = pygame.font.SysFont('Corbel', 35)
+    big_font = pygame.font.SysFont('Corbel', 50)
+    text = smallfont.render('Play', True, color)
+    title = big_font.render('Survival game', True, (0, 0, 0))
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if width / 2 - 70 <= mouse[0] <= width / 2 + 70 and height / 2 - 20 <= mouse[1] <= height / 2 + 20:
+                    game_loop()
+
+        mouse = pygame.mouse.get_pos()
+        screen.fill((240, 240, 255))
+        if width / 2 - 70 <= mouse[0] <= width / 2 + 70 and height / 2 - 20 <= mouse[1] <= height / 2 + 20:
+            pygame.draw.rect(screen, color_light, [width / 2 - 70, height / 2 - 20, 140, 40])
+        else:
+            pygame.draw.rect(screen, color_dark, [width / 2 - 70, height / 2 - 20, 140, 40])
+
+        f = open('best_score.txt', 'r')
+        best = smallfont.render(f'Best score: {f.read().strip()}', True, (0, 0, 0))
+        f.close()
+
+        screen.blit(text, (width / 2 - 35, height / 2 - 10))
+        screen.blit(title, (width / 2 - 120, height / 2 - 100))
+        screen.blit(best, (width / 2 - 80, height / 2 + 50))
+        pygame.display.update()
+
+
+# I made this in 10 minutes and it kinda works
+def end_screen(score):
+    color = (255, 255, 255)
+    color_light = (170, 170, 170)
+    color_dark = (100, 100, 100)
+    width = screen.get_width()
+    height = screen.get_height()
+    smallfont = pygame.font.SysFont('Corbel', 35)
+    text = smallfont.render('Continue', True, color)
+    big_font = pygame.font.SysFont('Corbel', 50)
+    score_text = big_font.render(f'Your score: {str(score)}', True, (0, 0, 0))
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if width / 2 - 70 <= mouse[0] <= width / 2 + 70 and height / 2 - 20 <= mouse[1] <= height / 2 + 20:
+                    return None
+
+        mouse = pygame.mouse.get_pos()
+        screen.fill((240, 240, 255))
+        if width / 2 - 70 <= mouse[0] <= width / 2 + 70 and height / 2 - 20 <= mouse[1] <= height / 2 + 20:
+            pygame.draw.rect(screen, color_light, [width / 2 - 70, height / 2 - 20, 140, 40])
+        else:
+            pygame.draw.rect(screen, color_dark, [width / 2 - 70, height / 2 - 20, 140, 40])
+        screen.blit(text, (width / 2 - 45, height / 2 - 10))
+        screen.blit(score_text, (width / 2 - 120, height / 2 - 100))
+        pygame.display.update()
+
 
 while __name__ == '__main__':
     screen.fill(BGCOLOR)
     pygame.display.flip()
-    print(game_loop())
+    start_screen()
 
 pygame.quit()

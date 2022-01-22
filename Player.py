@@ -14,9 +14,9 @@ def normalize_vector(vector):
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos):
         super().__init__()
-
-        self.image = pygame.Surface([16, 16])
-        self.image.fill('blue')
+        self.faces = (pygame.image.load('textures/faces/happy.png'), pygame.image.load('textures/faces/neutral.png'),
+                      pygame.image.load('textures/faces/sad.png'), pygame.image.load('textures/faces/super_happy.png'))
+        self.image = pygame.image.load('textures/faces/happy.png')
 
         self.weapon = Weapon(300, 'Gun', 50, 350)
         self.energy = 2500
@@ -32,6 +32,16 @@ class Player(pygame.sprite.Sprite):
         self.radius = self.rect.width / 2
 
     def move(self, mobs, columns, time_delta):
+        if self.energy > 2000:
+            if self.energy > 2450 and self.weapon.ammunition > 90:
+                self.image = self.faces[3]  # Hehehe
+            else:
+                self.image = self.faces[0]  # Happy
+        elif self.energy > 600:
+            self.image = self.faces[1]  # Neutral
+        else:
+            self.image = self.faces[2]  # Sad
+
         # We cal velocity at abs(e).
         if self.velocity[0] > 3:
             self.velocity[0] = 3

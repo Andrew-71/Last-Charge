@@ -23,10 +23,13 @@ class AmmoCrate(pygame.sprite.Sprite):
 
     def behaviour(self, player):
         if pygame.sprite.collide_circle(self, player.sprite):
-            player.sprite.weapon.ammunition += 20
-            self.sound_effect.play()
-            self.kill()
-            return 'used'
+            if player.sprite.weapon.ammunition < 100:
+                player.sprite.weapon.ammunition += 20
+                if player.sprite.weapon.ammunition > 100:
+                    player.sprite.weapon.ammunition = 100
+                self.sound_effect.play()
+                self.kill()
+                return 'used'
 
     def render(self, surface):
         surface.blit(self.image, self.pos)

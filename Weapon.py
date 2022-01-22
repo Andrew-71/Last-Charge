@@ -103,7 +103,7 @@ class Weapon:
         self.cooldown = cooldown
         self.damage = damage
         self.weapon_range = weapon_range
-        self.ammunition = 30
+        self.ammunition = 31
 
         self.sound_effect = mixer.Sound('sounds/shoot.wav')
         self.no_round_sound = mixer.Sound('sounds/no_round.wav')
