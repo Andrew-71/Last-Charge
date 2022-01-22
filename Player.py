@@ -12,16 +12,16 @@ def normalize_vector(vector):
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, pos):
         super().__init__()
 
-        self.image = pygame.Surface([8, 8])
+        self.image = pygame.Surface([16, 16])
         self.image.fill('blue')
 
-        self.weapon = Weapon(300, 'Energy Rifle', 50, 200)
-        self.energy = 5000
+        self.weapon = Weapon(300, 'Gun', 50, 350)
+        self.energy = 2500
         self.hp = 100
-        self.pos = [5, 5]
+        self.pos = list(pos)
 
         self.velocity = [0, 0]
 
@@ -32,6 +32,7 @@ class Player(pygame.sprite.Sprite):
         self.radius = self.rect.width / 2
 
     def move(self, mobs, columns, time_delta):
+        # We cal velocity at abs(e).
         if self.velocity[0] > 3:
             self.velocity[0] = 3
         if self.velocity[1] > 3:
@@ -42,38 +43,45 @@ class Player(pygame.sprite.Sprite):
             self.velocity[1] = -3
 
         self.pos[0] += self.velocity[0] * time_delta * 0.01
+        self.rect.topleft = self.pos
+        block_hit_list = pygame.sprite.spritecollide(self, columns, False)
+        for block in block_hit_list:
+            # If we are moving right, set our right side to the left side of
+            # the item we hit
+            if self.velocity[0] > 0:
+                self.rect.right = block.rect.left
+            else:
+                # Otherwise if we are moving left, do the opposite.
+                self.rect.left = block.rect.right
+        self.pos = list(self.rect.topleft)
+
         self.pos[1] += self.velocity[1] * time_delta * 0.01
-
-        if self.pos[0] > 780:
-            self.pos[0] -= (self.pos[0] - 780)
-        if self.pos[0] < 20:
-            self.pos[0] += (20 - self.pos[0])
-
-        if self.pos[1] > 580:
-            self.pos[1] -= (self.pos[1] - 580)
-        if self.pos[1] < 20:
-            self.pos[1] += (20 - self.pos[1])
+        self.rect.topleft = self.pos
+        block_hit_list = pygame.sprite.spritecollide(self, columns, False)
+        for block in block_hit_list:
+            # If we are moving right, set our right side to the left side of
+            # the item we hit
+            if self.velocity[1] > 0:
+                self.rect.bottom = block.rect.top
+            else:
+                self.rect.top = block.rect.bottom
+        self.pos = list(self.rect.topleft)
 
         # Collision handling with mobs
         move_vector = [0, 0]
         for sprite in mobs:
             if pygame.sprite.collide_circle(self, sprite):
-                move_vector[0] += self.pos[0] - sprite.pos[0]
-                move_vector[1] += self.pos[1] - sprite.pos[1]
-
-        for sprite in columns:
-            if pygame.sprite.collide_circle(self, sprite):
-                move_vector[0] += self.pos[0] - sprite.pos[0]
-                move_vector[1] += self.pos[1] - sprite.pos[1]
+                pass
+                #move_vector[0] += self.pos[0] - sprite.pos[0]
+                #move_vector[1] += self.pos[1] - sprite.pos[1]
 
         move_vector = normalize_vector(move_vector)
         self.pos[0] += move_vector[0] * self.velocity[0]
         self.pos[1] += move_vector[1] * self.velocity[1]
-
         self.rect.topleft = self.pos
 
-    def shoot(self, mouse_pos):
-        self.weapon.shoot(self, mouse_pos)
+    def shoot(self, mouse_pos, surface):
+        self.weapon.shoot(self, mouse_pos, surface)
 
     def render(self, surface):
 

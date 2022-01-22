@@ -34,8 +34,12 @@ class DamageIndicator(pygame.sprite.Sprite):
         if math.sqrt(dist_x ** 2 + dist_y ** 2) >= self.distance:
             self.kill()
 
-    def render(self, surface):
-        surface.blit(self.text, self.pos)
+    def render(self, player, surface):
+        screen_size = surface.get_size()
+        middle = [screen_size[0] // 2, screen_size[1] // 2]
+        difference = [middle[0] - player.pos[0], middle[1] - player.pos[1]]
+        local_position = [self.pos[0] + difference[0], self.pos[1] + difference[1]]
+        surface.blit(self.text, local_position)
 
 
 class Projectile(pygame.sprite.Sprite):
@@ -67,6 +71,8 @@ class Projectile(pygame.sprite.Sprite):
         for sprite in mobs:
             if pygame.sprite.collide_circle(self, sprite):
                 sprite.hp -= self.damage
+                sprite.image.fill(pygame.Color('red'))
+                sprite.speed *= 0.6
                 self.player.damage_indicators.add(DamageIndicator(self.pos, self.damage))
                 self.kill()
 
@@ -102,7 +108,7 @@ class Weapon:
         self.sound_effect = mixer.Sound('sounds/shoot.wav')
         self.no_round_sound = mixer.Sound('sounds/no_round.wav')
 
-    def shoot(self, user, mouse_pos):
+    def shoot(self, user, mouse_pos, surface):
         current_time = pygame.time.get_ticks()
         if current_time - self.last_shot > self.cooldown:
             self.last_shot = pygame.time.get_ticks()
@@ -110,13 +116,15 @@ class Weapon:
             if self.ammunition > 0:
                 self.ammunition -= 1
 
-                direction = (mouse_pos[0] - user.pos[0], mouse_pos[1] - user.pos[1]) \
-                    if mouse_pos != user.pos else (1, 1)
+                screen_size = surface.get_size()
+                middle = [screen_size[0] // 2, screen_size[1] // 2]
+
+                direction = (mouse_pos[0] - middle[0], mouse_pos[1] - middle[1]) \
+                    if mouse_pos != middle else (1, 1)
 
                 user.projectiles.add(Projectile(user.pos,
                                                 normalize_vector(direction),
                                                 self.damage, self.weapon_range, user))
-
                 self.sound_effect.play()
             else:
                 self.no_round_sound.play()
