@@ -1,3 +1,4 @@
+import os
 import time
 
 import pygame
@@ -154,7 +155,8 @@ def game_loop():
     spawn_points = list()
 
     # Load a random level.
-    levels = ('arena_level.txt', 'arena_2_level.txt', 'arena_3_level.txt')
+    levels = ['levels/arenas/' + i for i in os.listdir(os.getcwd() + '/levels/arenas')]
+
     level = level_to_list(random.choice(levels))
     x = y = 120
     spawn_point = (x, y)

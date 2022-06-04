@@ -8,18 +8,26 @@ from main import render_sprite
 mixer.init()
 
 
-class AmmoCrate(pygame.sprite.Sprite):
-    def __init__(self, pos):
+class Crate(pygame.sprite.Sprite):
+    def __init__(self, pos, colour):
         super().__init__()
         self.pos = list(pos)
 
         self.image = pygame.Surface([8, 8])
-        self.image.fill(pygame.Color('green'))
+        self.image.fill(pygame.Color(colour))
 
         self.rect = self.image.get_rect(x=self.pos[0], y=self.pos[1])
         self.radius = self.rect.width / 2
 
         self.sound_effect = mixer.Sound('sounds/pickup.wav')
+
+    def render(self, surface):
+        surface.blit(self.image, self.pos)
+
+
+class AmmoCrate(Crate):
+    def __init__(self, pos):
+        super().__init__(pos, 'green')
 
     def behaviour(self, player):
         if pygame.sprite.collide_circle(self, player.sprite):
@@ -31,22 +39,10 @@ class AmmoCrate(pygame.sprite.Sprite):
                 self.kill()
                 return 'used'
 
-    def render(self, surface):
-        surface.blit(self.image, self.pos)
 
-
-class HealthCrate(pygame.sprite.Sprite):
+class HealthCrate(Crate):
     def __init__(self, pos):
-        super().__init__()
-        self.pos = list(pos)
-
-        self.image = pygame.Surface([8, 8])
-        self.image.fill(pygame.Color('red'))
-
-        self.rect = self.image.get_rect(x=self.pos[0], y=self.pos[1])
-        self.radius = self.rect.width / 2
-
-        self.sound_effect = mixer.Sound('sounds/pickup.wav')
+        super().__init__(pos, 'red')
 
     def behaviour(self, player):
         if pygame.sprite.collide_circle(self, player.sprite):
@@ -57,9 +53,6 @@ class HealthCrate(pygame.sprite.Sprite):
                 self.sound_effect.play()
                 self.kill()
                 return 'used'
-
-    def render(self, surface):
-        surface.blit(self.image, self.pos)
 
 
 class Column(pygame.sprite.Sprite):
